@@ -1,0 +1,6 @@
+@JobSentinel.Api_HostAddress = http://localhost:5122
+
+GET {{JobSentinel.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

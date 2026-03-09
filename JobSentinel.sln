@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobSentinel.Api", "JobSentinel.Api\JobSentinel.Api.csproj", "{CCEEEEA4-2490-483A-BCFA-76BE4E2DA404}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobSentinel.Core", "JobSentinel.Core\JobSentinel.Core.csproj", "{3509ED91-635F-4CA7-885E-D53243C3997B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobSentinel.Infrastructure", "JobSentinel.Infrastructure\JobSentinel.Infrastructure.csproj", "{ECC992C6-D04B-4573-9DE1-31DBBD6E5146}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CCEEEEA4-2490-483A-BCFA-76BE4E2DA404}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCEEEEA4-2490-483A-BCFA-76BE4E2DA404}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCEEEEA4-2490-483A-BCFA-76BE4E2DA404}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCEEEEA4-2490-483A-BCFA-76BE4E2DA404}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3509ED91-635F-4CA7-885E-D53243C3997B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3509ED91-635F-4CA7-885E-D53243C3997B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3509ED91-635F-4CA7-885E-D53243C3997B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3509ED91-635F-4CA7-885E-D53243C3997B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ECC992C6-D04B-4573-9DE1-31DBBD6E5146}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ECC992C6-D04B-4573-9DE1-31DBBD6E5146}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ECC992C6-D04B-4573-9DE1-31DBBD6E5146}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ECC992C6-D04B-4573-9DE1-31DBBD6E5146}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
