@@ -122,19 +122,40 @@ public class DevBgScraper: IJobScraper
                 return scrapedJobs;
             } 
             
-            var jobCards = await page.Locator(".jobs-loop .job-list-item, .search-results-items .job-list-item").AllAsync();       
+            var jobCards = await page.Locator(".jobs-loop .job-list-item, .search-results-items .job-list-item").AllAsync();
             foreach (var card in jobCards)
             {
                 var titleText = await card.Locator("h6.job-title").First.InnerTextAsync();
-                var companyNameText = await card.Locator(".company-name").First.InnerTextAsync();
                 var jobUrl = await card.Locator("a").First.GetAttributeAsync("href");
-            
+                string? companyNameText = null;
+                var companyLocator = card.Locator(".company-name");
+                if (await companyLocator.CountAsync() > 0)
+                {
+                    companyNameText = await companyLocator.First.TextContentAsync();
+                }
+
+                string? locationText = null;
+                var locationLocator = card.Locator(".tags-wrap .badge").First;
+                if (await locationLocator.CountAsync() > 0)
+                {
+                    locationText = await locationLocator.TextContentAsync();
+                }
+
+                string? salaryText = null;
+                var salaryLocator = card.Locator(".tags-wrap .badge:has-text('лв'), .tags-wrap .badge:has-text('EUR')").First;
+                if (await salaryLocator.CountAsync() > 0)
+                {
+                    salaryText = await salaryLocator.TextContentAsync();
+                }
+
                 if (!string.IsNullOrWhiteSpace(titleText))
                 {
                     scrapedJobs.Add(new JobOffer
                     {
                         Title = titleText.Trim(),
-                        CompanyName = companyNameText.Trim(), 
+                        CompanyName = companyNameText?.Trim(), 
+                        Location = locationText?.Trim(),
+                        Salary = salaryText?.Trim(),
                         Url = jobUrl,                         
                         SourceSite = ScraperName,
                         ScrapedAt = DateTime.UtcNow

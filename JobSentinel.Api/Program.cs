@@ -2,6 +2,7 @@ using JobSentinel.Core.Interfaces;
 using JobSentinel.Core.Models;
 using JobSentinel.Infrastructure.Data;
 using JobSentinel.Infrastructure.Scrapers;
+using JobSentinel.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddScoped<IJobScraper, DevBgScraper>();
+builder.Services.AddScoped<IJobService, JobService>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
@@ -22,21 +24,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/scrape", async (IJobScraper scraper, ApplicationDbContext dbContext) =>
+app.MapGet("/scrape", async (IJobService jobService) =>
 {
     var filter = new JobSearchFilter 
     { 
         Category = "net",
     };
-    var scrapedJobs = await scraper.ScrapeJobsAsync(filter);
+    
+    var resultMessage = await jobService.RunAllScrapersAsync(filter);
 
-    if (scrapedJobs.Any())
-    {
-        dbContext.JobOffers.AddRange(scrapedJobs);
-        await dbContext.SaveChangesAsync();
-    }
-
-    return Results.Ok($"Success! The robot scraped and saved {scrapedJobs.Count()} jobs to your database.");
+    return Results.Ok(resultMessage);
 });
 
 app.Run();
