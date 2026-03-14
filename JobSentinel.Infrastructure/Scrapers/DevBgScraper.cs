@@ -5,11 +5,11 @@ using Microsoft.Playwright;
 
 namespace JobSentinel.Infrastructure.Scrapers;
 
-public class DevBgScraper: IJobScraper
+public class DevBgScraper: BaseJobScraper
 {
-    public string ScraperName => "Dev.bg";
+    public override string ScraperName => "Dev.bg";
     
-    public async Task<IEnumerable<JobOffer>> ScrapeJobsAsync(JobSearchFilter filter)
+    protected override async Task<IEnumerable<JobOffer>> ExtractJobsAsync(IPage page, JobSearchFilter filter)
     {
         var allScrapedJobs = new List<JobOffer>();
         
@@ -32,21 +32,6 @@ public class DevBgScraper: IJobScraper
             categoriesToScrape.Add(filter.Category ?? "");
         }
         
-        using var playwright = await Playwright.CreateAsync();
-        await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true });
-        var context = await browser.NewContextAsync(new() { ViewportSize = new() { Width = 1920, Height = 1080 }});
-        
-        await context.RouteAsync("**/*", async route =>
-        {
-            if (route.Request.ResourceType == "image" || route.Request.ResourceType == "media" || route.Request.ResourceType == "font")
-                await route.AbortAsync();
-            else
-                await route.ContinueAsync();
-        });
-        
-        var page = await context.NewPageAsync();
-
-        var list = new List<JobOffer>().AsEnumerable();
         try 
         { 
             await page.GotoAsync("https://dev.bg/", new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded }); 

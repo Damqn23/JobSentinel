@@ -10,6 +10,7 @@ public class JobService: IJobService
 {
     private readonly IEnumerable<IJobScraper> _scrapers;
     private readonly ApplicationDbContext _dbContext;
+    private static readonly SemaphoreSlim _scrapeLock = new(1, 1);
     
     public JobService(IEnumerable<IJobScraper> scrapers, ApplicationDbContext dbContext)
     {
@@ -20,54 +21,60 @@ public class JobService: IJobService
 
     public async Task<string> RunAllScrapersAsync(JobSearchFilter filter)
     {
-        int newJobsAdded = 0;
-        int oldJobsRemoved = 0;
-
-        // Is this a full sweep of the market?
-        bool isMasterScrape = string.IsNullOrWhiteSpace(filter.Category) && string.IsNullOrWhiteSpace(filter.Keyword);
         
-        foreach (var scraper in _scrapers)
+        if (!await _scrapeLock.WaitAsync(0))
         {
-            Console.WriteLine($"[MANAGER] Commanding {scraper.ScraperName} to execute scrape...");
+            return "[MANAGER] A scrape is already running. Please wait for it to finish.";
+        }
+
+        try
+        {
+            int newJobsAdded = 0;
+            int oldJobsRemoved = 0;
+        
+            bool isMasterScrape = string.IsNullOrWhiteSpace(filter.Category) && string.IsNullOrWhiteSpace(filter.Keyword);
+        
+            foreach (var scraper in _scrapers)
+            {
+                Console.WriteLine($"[MANAGER] Commanding {scraper.ScraperName} to execute scrape...");
             
-            // The Manager doesn't care HOW the scraper gets the jobs, it just waits for the list!
-            var scrapedJobs = await scraper.ScrapeJobsAsync(filter);
+                var scrapedJobs = await scraper.ScrapeJobsAsync(filter);
 
-            if (!scrapedJobs.Any()) continue;
+                if (!scrapedJobs.Any()) continue;
 
-            var existingUrls = await _dbContext.JobOffers
-                .Where(j => j.SourceSite == scraper.ScraperName)
-                .Select(j => j.Url)
-                .ToListAsync();
-
-            var newJobs = scrapedJobs.Where(j => !existingUrls.Contains(j.Url)).ToList();
-            if (newJobs.Any())
-            {
-                _dbContext.JobOffers.AddRange(newJobs);
-                newJobsAdded += newJobs.Count;
-            }
-
-            // Delta Sync: Only delete if the robot did a Master Scrape
-            if (isMasterScrape)
-            {
-                var scrapedUrls = scrapedJobs.Select(j => j.Url).ToList();
-                var expiredJobs = await _dbContext.JobOffers
-                    .Where(j => j.SourceSite == scraper.ScraperName && !scrapedUrls.Contains(j.Url))
+                var existingUrls = await _dbContext.JobOffers
+                    .Where(j => j.SourceSite == scraper.ScraperName)
+                    .Select(j => j.Url)
                     .ToListAsync();
 
-                if (expiredJobs.Any())
+                var newJobs = scrapedJobs.Where(j => !existingUrls.Contains(j.Url)).ToList();
+                if (newJobs.Any())
                 {
-                    _dbContext.JobOffers.RemoveRange(expiredJobs);
-                    oldJobsRemoved += expiredJobs.Count;
+                    _dbContext.JobOffers.AddRange(newJobs);
+                    newJobsAdded += newJobs.Count;
+                }
+
+                if (isMasterScrape)
+                {
+                    var scrapedUrls = scrapedJobs.Select(j => j.Url).ToList();
+                
+                    oldJobsRemoved += await _dbContext.JobOffers
+                        .Where(j => j.SourceSite == scraper.ScraperName && !scrapedUrls.Contains(j.Url))
+                        .ExecuteDeleteAsync();
                 }
             }
-        }
 
-        if (newJobsAdded > 0 || oldJobsRemoved > 0)
+            if (newJobsAdded > 0)
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+
+            return $"Sync Complete! Added {newJobsAdded} new jobs. Removed {oldJobsRemoved} expired jobs.";
+        }
+        finally
         {
-            await _dbContext.SaveChangesAsync();
+            _scrapeLock.Release();
         }
-
-        return $"Sync Complete! Added {newJobsAdded} new jobs. Removed {oldJobsRemoved} expired jobs.";
+        
     }
 }
