@@ -147,17 +147,21 @@ public class DevBgScraper: BaseJobScraper
                 try
                 {
                     var nextButton = page.Locator("a.facetwp-page.next");
-                    if (await nextButton.CountAsync() == 0) break;
+                    if (await nextButton.CountAsync() == 0 || !await nextButton.IsVisibleAsync()) 
+                    {
+                        break; 
+                    }
                     
-                    await nextButton.ScrollIntoViewIfNeededAsync();
+                    await nextButton.ScrollIntoViewIfNeededAsync(new() { Timeout = 5000 });
                     await Task.Delay(300);
-                    await nextButton.ClickAsync();
+                    await nextButton.ClickAsync(new() { Timeout = 5000 });
                     await Task.Delay(800);
+                    
                     currentPage++;
                 }
-                catch (PlaywrightException ex)
+                catch (Exception ex) 
                 {
-                    Console.WriteLine($"[DEV.BG] Pagination error on page {currentPage}: {ex.Message}");
+                    Console.WriteLine($"[DEV.BG] Pagination finished/stopped on page {currentPage}: {ex.Message}");
                     break;
                 }
             }

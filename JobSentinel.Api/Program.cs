@@ -14,7 +14,18 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddScoped<IJobScraper, DevBgScraper>();
+//builder.Services.AddScoped<IJobScraper, JobsBgScraper>();
 builder.Services.AddScoped<IJobService, JobService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularUI", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
@@ -23,6 +34,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAngularUI");
 
 app.MapGet("/scrape", async ([AsParameters] JobSearchFilter jobSearchFilter, IJobService jobService) =>
 {

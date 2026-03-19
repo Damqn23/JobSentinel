@@ -1,0 +1,31 @@
+<div class="max-w-4xl mx-auto pt-10 pb-20 px-5 font-sans">
+  
+  <h1 class="text-3xl font-bold text-slate-800 mb-1">Latest IT Jobs</h1>
+  <p class="text-slate-500 mb-8">Found {{ jobs.length }} jobs in the database.</p>
+
+  <div class="flex flex-col gap-4">
+    
+    @for (job of jobs; track job.id) {
+      <div class="border border-slate-200 p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white">
+        
+        <h3 class="text-xl font-semibold text-blue-600 mb-1">
+          <a [href]="job.url" target="_blank" class="hover:underline">
+            {{ job.title }}
+          </a>
+        </h3>
+        
+        <div class="text-slate-500 text-sm">
+          <span class="font-bold text-slate-700">{{ job.companyName }}</span> | {{ job.location }}
+        </div>
+        
+        @if (job.salary) {
+          <div class="inline-block bg-green-100 text-green-800 font-bold px-3 py-1 rounded text-sm mt-3">
+            💰 {{ job.salary }}
+          </div>
+        }
+        
+      </div>
+    }
+
+  </div>
+</div>
